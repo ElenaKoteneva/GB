@@ -1,0 +1,259 @@
+/*
+РРјРµРµС‚СЃСЏ Р±Р°Р·Р° СЃРѕС‚СЂСѓРґРЅРёРєРѕРІ Рё РЅРѕРјРµСЂРѕРІ РёС… С‚РµР»РµС„РѕРЅРѕРІ. РўСЂРµР±СѓРµС‚СЃСЏ РЅР°РїРёСЃР°С‚СЊ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёРµ СЃС‚СЂСѓРєС‚СѓСЂС‹ РґР»СЏ С…СЂР°РЅРµРЅРёСЏ
+РґР°РЅРЅС‹С…, Рё Р·Р°РїРѕР»РЅРёС‚СЊ РєРѕРЅС‚РµР№РЅРµСЂ Р·Р°РїРёСЃСЏРјРё РёР· Р±Р°Р·С‹. Р—Р°С‚РµРј РЅРµРѕР±С…РѕРґРёРјРѕ СЂРµР°Р»РёР·РѕРІР°С‚СЊ РјРµС‚РѕРґС‹ РѕР±СЂР°Р±РѕС‚РєРё РґР°РЅРЅС‹С…,
+Р° С‚Р°РєР¶Рµ РІС‹РІРµСЃС‚Рё РЅР° СЌРєСЂР°РЅ РІСЃСЋ РЅРµРѕР±С…РѕРґРёРјСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ.
+Р’Р°Р¶РЅРѕ! РРјРµРЅР° РїРµСЂРµРјРµРЅРЅС‹Рј, РєР»Р°СЃСЃР°Рј Рё С„СѓРЅРєС†РёСЏРј РґР°РІР°Р№С‚Рµ РѕСЃРѕР·РЅР°РЅРЅС‹Рµ, СЃРѕСЃС‚РѕСЏС‰РёРµ РёР· СЃР»РѕРІ РЅР° Р°РЅРіР»РёР№СЃРєРѕРј СЏР·С‹РєРµ.
+*/
+
+#include <iostream>
+#include <vector>
+#include <tuple>
+#include <optional>
+#include <algorithm>
+#include <fstream>
+
+using namespace std;
+
+/*
+ 1. РЎРѕР·РґР°Р№С‚Рµ СЃС‚СЂСѓРєС‚СѓСЂСѓ Person СЃ 3 РїРѕР»СЏРјРё: С„Р°РјРёР»РёСЏ, РёРјСЏ, РѕС‚С‡РµСЃС‚РІРѕ. РџРѕР»Рµ РѕС‚С‡РµСЃС‚РІРѕ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ РѕРїС†РёРѕРЅР°Р»СЊРЅРѕРіРѕ С‚РёРїР°,
+ С‚.Рє. РЅРµ Сѓ РІСЃРµС… Р»СЋРґРµР№ РµСЃС‚СЊ РѕС‚С‡РµСЃС‚РІРѕ. РџРµСЂРµРіСЂСѓР·РёС‚Рµ РѕРїРµСЂР°С‚РѕСЂ РІС‹РІРѕРґР° РґР°РЅРЅС‹С… РґР»СЏ СЌС‚РѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹. РўР°РєР¶Рµ РїРµСЂРµРіСЂСѓР·РёС‚Рµ
+ РѕРїРµСЂР°С‚РѕСЂС‹ < Рё == (РёСЃРїРѕР»СЊР·СѓР№С‚Рµ tie).
+ */
+
+struct Person
+{
+    string surname, name;
+    optional<string> patronymic;
+
+    friend ostream& operator<< (ostream& out, const Person& p);
+
+    bool operator< (const Person& p)
+    {
+        return tie(surname, name, patronymic) < tie(p.surname, p.name, p.patronymic);
+    }
+
+    bool operator== (const Person& p)
+    {
+        return tie(surname, name, patronymic) == tie(p.surname, p.name, p.patronymic);
+    }
+};
+
+ostream& operator<< (ostream& out, const Person& p)
+{
+    return out << p.surname << ' ' << p.name << ' ' << p.patronymic.value_or("") << endl;
+}
+
+/*2. РЎРѕР·РґР°Р№С‚Рµ СЃС‚СЂСѓРєС‚СѓСЂСѓ PhoneNumber СЃ 4 РїРѕР»СЏРјРё:
+В·         РєРѕРґ СЃС‚СЂР°РЅС‹ (С†РµР»РѕРµ С‡РёСЃР»Рѕ)
+В·         РєРѕРґ РіРѕСЂРѕРґР° (С†РµР»РѕРµ С‡РёСЃР»Рѕ)
+В·         РЅРѕРјРµСЂ (СЃС‚СЂРѕРєР°)
+В·         РґРѕР±Р°РІРѕС‡РЅС‹Р№ РЅРѕРјРµСЂ (С†РµР»РѕРµ С‡РёСЃР»Рѕ, РѕРїС†РёРѕРЅР°Р»СЊРЅС‹Р№ С‚РёРї)
+Р”Р»СЏ СЌС‚РѕР№ СЃС‚СЂСѓРєС‚СѓСЂС‹ РїРµСЂРµРіСЂСѓР·РёС‚Рµ РѕРїРµСЂР°С‚РѕСЂ РІС‹РІРѕРґР°.  РќРµРѕР±С…РѕРґРёРјРѕ, С‡С‚РѕР±С‹ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РІС‹РІРѕРґРёР»СЃСЏ РІ С„РѕСЂРјР°С‚Рµ:
++7(911)1234567 12, РіРґРµ 7 вЂ“ СЌС‚Рѕ РЅРѕРјРµСЂ СЃС‚СЂР°РЅС‹, 911 вЂ“ РЅРѕРјРµСЂ РіРѕСЂРѕРґР°, 1234567 вЂ“ РЅРѕРјРµСЂ, 12 вЂ“ РґРѕР±Р°РІРѕС‡РЅС‹Р№ РЅРѕРјРµСЂ.
+Р•СЃР»Рё РґРѕР±Р°РІРѕС‡РЅРѕРіРѕ РЅРѕРјРµСЂР° РЅРµС‚, С‚Рѕ РµРіРѕ РІС‹РІРѕРґРёС‚СЊ РЅРµ РЅР°РґРѕ.  РўР°РєР¶Рµ РїРµСЂРµРіСЂСѓР·РёС‚Рµ РѕРїРµСЂР°С‚РѕСЂС‹ < Рё == (РёСЃРїРѕР»СЊР·СѓР№С‚Рµ tie)
+*/
+
+struct PhoneNumber
+{
+    uint16_t countryCode, townCode;
+    uint16_t number;
+    optional<uint8_t> addNumber;
+
+    friend ostream& operator<< (ostream& out, const PhoneNumber& pn);
+
+    bool operator< (const PhoneNumber& pn)
+    {
+        return tie(countryCode, townCode, number, addNumber) <
+                tie(pn.countryCode, pn.townCode, pn.number, pn.addNumber);
+    }
+
+    bool operator== (const PhoneNumber& pn)
+    {
+        return tie(countryCode, townCode, number, addNumber) ==
+                    tie(pn.countryCode, pn.townCode, pn.number, pn.addNumber);
+    }
+
+    void operator= (const PhoneNumber& pn)
+    {
+        countryCode = pn.countryCode;
+        townCode = pn.townCode;
+        number = pn.number;
+        addNumber = pn.addNumber;
+
+    }
+};
+
+ostream& operator<< (ostream& out, const PhoneNumber& pn)
+{
+    if(pn.addNumber.has_value())
+        return out << "+" << pn.countryCode << "(" << pn.townCode << ")" << pn.number << " " << pn.addNumber.value();
+    else
+        return out << "+" << pn.countryCode << "(" << pn.townCode << ")" << pn.number;
+}
+
+/*3. РЎРѕР·РґР°Р№С‚Рµ РєР»Р°СЃСЃ PhoneBook, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ РІ РєРѕРЅС‚РµР№РЅРµСЂРµ С…СЂР°РЅРёС‚СЊ РїР°СЂС‹: Р§РµР»РѕРІРµРє вЂ“ РќРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°. РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
+СЌС‚РѕРіРѕ РєР»Р°СЃСЃР° РґРѕР»Р¶РµРЅ РїСЂРёРЅРёРјР°С‚СЊ РїР°СЂР°РјРµС‚СЂ С‚РёРїР° ifstream вЂ“ РїРѕС‚РѕРє РґР°РЅРЅС‹С…, РїРѕР»СѓС‡РµРЅРЅС‹С… РёР· С„Р°Р№Р»Р°. Р’ С‚РµР»Рµ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂР°
+РїСЂРѕРёСЃС…РѕРґРёС‚ СЃС‡РёС‚С‹РІР°РЅРёРµ РґР°РЅРЅС‹С… РёР· С„Р°Р№Р»Р° Рё Р·Р°РїРѕР»РЅРµРЅРёРµ РєРѕРЅС‚РµР№РЅРµСЂР°. РљР»Р°СЃСЃ PhoneBook РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РїРµСЂРµРіСЂСѓР¶РµРЅРЅС‹Р№
+РѕРїРµСЂР°С‚РѕСЂ РІС‹РІРѕРґР°, РґР»СЏ РІС‹РІРѕРґР° РІСЃРµС… РґР°РЅРЅС‹С… РёР· РєРѕРЅС‚РµР№РЅРµСЂР° РІ РєРѕРЅСЃРѕР»СЊ.
+
+- Р’ РєР»Р°СЃСЃРµ PhoneBook СЂРµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ SortByName, РєРѕС‚РѕСЂС‹Р№ РґРѕР»Р¶РµРЅ СЃРѕСЂС‚РёСЂРѕРІР°С‚СЊ СЌР»РµРјРµРЅС‚С‹ РєРѕРЅС‚РµР№РЅРµСЂР° РїРѕ С„Р°РјРёР»РёРё Р»СЋРґРµР№
+РІ Р°Р»С„Р°РІРёС‚РЅРѕРј РїРѕСЂСЏРґРєРµ. Р•СЃР»Рё С„Р°РјРёР»РёРё Р±СѓРґСѓС‚ РѕРґРёРЅР°РєРѕРІС‹РјРё, С‚Рѕ СЃРѕСЂС‚РёСЂРѕРІРєР° РґРѕР»Р¶РЅР° РІС‹РїРѕР»РЅСЏС‚СЊСЃСЏ РїРѕ РёРјРµРЅР°Рј, РµСЃР»Рё РёРјРµРЅР°
+Р±СѓРґСѓС‚ РѕРґРёРЅР°РєРѕРІС‹, С‚Рѕ СЃРѕСЂС‚РёСЂРѕРІРєР° РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ РїРѕ РѕС‚С‡РµСЃС‚РІР°Рј. РСЃРїРѕР»СЊР·СѓР№С‚Рµ Р°Р»РіРѕСЂРёС‚РјРёС‡РµСЃРєСѓСЋ С„СѓРЅРєС†РёСЋ sort.
+
+- Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ SortByPhone, РєРѕС‚РѕСЂС‹Р№ РґРѕР»Р¶РµРЅ СЃРѕСЂС‚РёСЂРѕРІР°С‚СЊ СЌР»РµРјРµРЅС‚С‹ РєРѕРЅС‚РµР№РЅРµСЂР° РїРѕ РЅРѕРјРµСЂР°Рј С‚РµР»РµС„РѕРЅРѕРІ.
+РСЃРїРѕР»СЊР·СѓР№С‚Рµ Р°Р»РіРѕСЂРёС‚РјРёС‡РµСЃРєСѓСЋ С„СѓРЅРєС†РёСЋ sort.
+
+- Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ GetPhoneNumber, РєРѕС‚РѕСЂС‹Р№ РїСЂРёРЅРёРјР°РµС‚ С„Р°РјРёР»РёСЋ С‡РµР»РѕРІРµРєР°, Р° РІРѕР·РІСЂР°С‰Р°РµС‚ РєРѕСЂС‚РµР¶ РёР· СЃС‚СЂРѕРєРё Рё
+PhoneNumber. РЎС‚СЂРѕРєР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїСѓСЃС‚РѕР№, РµСЃР»Рё РЅР°Р№РґРµРЅ СЂРѕРІРЅРѕ РѕРґРёРЅ С‡РµР»РѕРІРµРє СЃ Р·Р°РґР°РЅРЅРѕРј С„Р°РјРёР»РёРµР№ РІ СЃРїРёСЃРєРµ.
+Р•СЃР»Рё РЅРµ РЅР°Р№РґРµРЅ РЅРё РѕРґРёРЅ С‡РµР»РѕРІРµРє СЃ Р·Р°РґР°РЅРЅРѕР№ С„Р°РјРёР»РёРµР№, С‚Рѕ РІ СЃС‚СЂРѕРєРµ РґРѕР»Р¶РЅР° Р±С‹С‚СЊ Р·Р°РїРёСЃСЊ В«not foundВ», РµСЃР»Рё
+Р±С‹Р»Рѕ РЅР°Р№РґРµРЅРѕ Р±РѕР»СЊС€Рµ РѕРґРЅРѕРіРѕ С‡РµР»РѕРІРµРєР°, С‚Рѕ РІ СЃС‚СЂРѕРєРµ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ В«found more than 1В».
+
+- Р РµР°Р»РёР·СѓР№С‚Рµ РјРµС‚РѕРґ ChangePhoneNumber, РєРѕС‚РѕСЂС‹Р№ РїСЂРёРЅРёРјР°РµС‚ С‡РµР»РѕРІРµРєР° Рё РЅРѕРІС‹Р№ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° Рё, РµСЃР»Рё РЅР°С…РѕРґРёС‚
+Р·Р°РґР°РЅРЅРѕРіРѕ С‡РµР»РѕРІРµРєР° РІ РєРѕРЅС‚РµР№РЅРµСЂРµ, С‚Рѕ РјРµРЅСЏРµС‚ РµРіРѕ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° РЅР° РЅРѕРІС‹Р№, РёРЅР°С‡Рµ РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµС‚.
+*/
+
+class PhoneBook
+{
+private:
+
+    vector<pair<Person, PhoneNumber>> notes;
+
+public:
+
+    PhoneBook(ifstream& file)
+    {
+        string word;
+
+        if (!file.is_open())
+        {
+            cout << "Fail reading a file!\n";
+        }
+
+        else
+        {
+            Person person;
+            PhoneNumber phoneNumber;
+            vector<pair<Person, PhoneNumber>> book;
+            while (!file.eof())
+            {
+                file >> word;
+                person.surname = word;
+                file >> word;
+                person.name = word;
+                file >> word;
+                person.patronymic = word;
+                file >> word;
+                phoneNumber.countryCode = atoi(word.c_str());
+                file >> word;
+                phoneNumber.townCode = atoi(word.c_str());
+                file >> word;
+                phoneNumber.number = atoi(word.c_str());
+                file >> word;
+                phoneNumber.addNumber = atoi(word.c_str());
+                notes.push_back({person, phoneNumber});
+            }
+        }
+    }
+
+    ~PhoneBook()
+    {
+        cout << "Destructor\n";
+    }
+
+    friend ostream& operator<< (ostream& out, PhoneBook& pb);
+
+    void SortByName()
+    {
+        sort(notes.begin(), notes.end(), [](pair <Person, PhoneNumber>& lhs, pair <Person, PhoneNumber>& rhs)
+        {return lhs.first < rhs.first;});
+    }
+
+    void SortByPhone()
+    {
+        sort(notes.begin(), notes.end(), [](pair <Person, PhoneNumber>& lhs, pair <Person, PhoneNumber>& rhs)
+        {return lhs.second < rhs.second;});
+    }
+
+    tuple<string, PhoneNumber> GetPhoneNumber(const string& findSurname) const
+    {
+        int counter = 0;
+        PhoneNumber temp;
+        for(pair n : notes)
+        {
+            if (n.first.surname == findSurname)
+            {
+                temp = n.second;
+                counter++;
+            }
+        }
+        if (counter == 0) return tie("not found", temp);
+        else if (counter == 1) return tie("", temp);
+        else return tie("found more than 1", temp);
+    }
+
+    void ChangePhoneNumber(Person p, PhoneNumber pn)
+    {
+        for(auto& [n, f] : notes)
+        {
+            if(n == p)
+            {
+                cout << "Equal" << endl;
+                f = pn;
+                break;
+            }
+        }
+    }
+
+};
+
+ostream& operator<< (ostream& out, PhoneBook& pb)
+{
+    for(auto n : pb.notes)
+    {
+        out << n.first << " " << n.second << endl;
+    }
+    return out;
+}
+
+int main()
+{
+    ifstream file("PhoneBook.txt");
+    PhoneBook book(file);
+    cout << book;
+
+
+
+    cout << "------SortByPhone-------" << endl;
+    book.SortByPhone();
+    cout << book;
+
+    cout << "------SortByName--------" << endl;
+    book.SortByName();
+    cout << book;
+
+    cout << "-----GetPhoneNumber-----" << endl;
+    // Р»СЏРјР±РґР° С„СѓРЅРєС†РёСЏ, РєРѕС‚РѕСЂР°СЏ РїСЂРёРЅРёРјР°РµС‚ С„Р°РјРёР»РёСЋ Рё РІС‹РІРѕРґРёС‚ РЅРѕРјРµСЂ С‚РµР»РµС„РѕРЅР° СЌС‚РѕРіРѕ С‡РµР»РѕРІРµРєР°, Р»РёР±Рѕ СЃС‚СЂРѕРєСѓ СЃ РѕС€РёР±РєРѕР№
+    auto print_phone_number = [&book](const string& surname)
+    {
+        cout << surname << "\t";
+        auto answer = book.GetPhoneNumber(surname);
+        if (get<0>(answer).empty())
+            cout << get<1>(answer);
+        else
+            cout << get<0>(answer);
+            cout << endl;
+    };
+
+        // РІС‹Р·РѕРІС‹ Р»СЏРјР±РґС‹
+        print_phone_number("Ivanov");
+        print_phone_number("Petrov");
+
+        cout << "----ChangePhoneNumber----" << endl;
+        book.ChangePhoneNumber(Person{ "Kotov", "Vasilii", "Eliseevich" },
+                               PhoneNumber{7, 123, 1534, 5});
+        book.ChangePhoneNumber(Person{ "Mironova", "Margarita", "Vladimirovna" },
+                               PhoneNumber{ 16, 465, 9155, 13 });
+        cout << book;
+
+    return 0;
+}

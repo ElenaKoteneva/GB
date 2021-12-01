@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/ai.hpp
+random
+-
+logic.hpp
+../include/logic.hpp
+
+../include/io.hpp
+iostream
+-
+logic.hpp
+../include/logic.hpp
+
+../include/logic.hpp
+cstdint
+-
+
+/home/elena/c++/dz8/src/main.cpp
+iostream
+-
+cassert
+-
+logic.hpp
+/home/elena/c++/dz8/src/logic.hpp
+io.hpp
+/home/elena/c++/dz8/src/io.hpp
+ai.hpp
+/home/elena/c++/dz8/src/ai.hpp
+
